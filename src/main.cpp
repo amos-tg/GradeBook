@@ -15,11 +15,13 @@ using namespace std;
 /// Loads the student names into (string *students), and the scores
 /// into 2D-array (int **scores) in an identical order to which student names
 /// are loaded into (string *students).
-int getScores(int scores[][NUM_SCORES], string *students, filesystem::path fpath);
+int getScores(
+    int scores[][NUM_SCORES], string *students, filesystem::path fpath);
 
 /// Produces the average for each row of scores within (int **scores), and loads
 /// it into (double *average_scores) in a row-based identical ordering. 
-void averageScores(int scores[][NUM_SCORES], double *average_scores);
+void averageScores(
+    int scores[][NUM_SCORES], double *average_scores, int num_students);
 
 /// Assigns each student within (string *students) a letter grade based on their
 /// score from (double *average_scores) and produces a neatly formatted column
@@ -40,11 +42,14 @@ int main(void) {
     filesystem::current_path().parent_path() / SCORES_FNAME;
 
   int num_stoods = getScores(scores, students, scores_path); 
+  averageScores(scores, average_scores, num_stoods);
 
   return 0;
 }
 
-int getScores(int scores[][NUM_SCORES], string *students, filesystem::path fpath) {
+int getScores(
+    int scores[][NUM_SCORES], string *students, filesystem::path fpath) 
+{
   const char *ERR_FOPEN = "Error: failed to open file";
   const char *ERR_FREAD = "Error: file read error";  
 
@@ -54,13 +59,13 @@ int getScores(int scores[][NUM_SCORES], string *students, filesystem::path fpath
     exit(EXIT_FAILURE);
   }
 
-  int stood_count {};
-  for (; stood_count < MAX_STUDENTS && file >> *students++; ++stood_count) {
-    for (int i {}; i < NUM_SCORES && file >> *scores[i]; ++i);
+  int nstd {};
+  for (; nstd < MAX_STUDENTS && file >> students[nstd]; ++nstd) {
+    for (int i {}; i < NUM_SCORES && file >> scores[nstd][i]; ++i);
   }
 
   if (file.eof()) {
-    return stood_count;
+    return nstd;
   } else if (!file) {
     cerr << ERR_FREAD << endl;
     exit(EXIT_FAILURE);
@@ -68,3 +73,17 @@ int getScores(int scores[][NUM_SCORES], string *students, filesystem::path fpath
 
   return UNREACHABLE;
 } 
+
+void averageScores(
+    int scores[][NUM_SCORES], double *average_scores, int num_students) 
+{
+  for (int i {}; i < num_students; ++i) {
+    double total {};
+
+    for (int ii {}; ii < NUM_SCORES; ++ii) {
+      total += scores[i][ii];
+    }
+
+    average_scores[i] = total / NUM_SCORES;
+  }
+}
