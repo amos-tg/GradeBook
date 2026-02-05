@@ -7,7 +7,6 @@
 #include <fstream>
 #include <filesystem>
 #include <string>
-#include <stdlib.h>
 
 using namespace std;
 
@@ -29,7 +28,12 @@ void averageScores(
 ///   - 1. student name
 ///   - 2. average score
 ///   - 3. letter grade
-string gradeFormat(double *average_scores, string *students);
+string gradeFormat(double *average_scores, string *students, int num_students);
+
+/// returns the letter grade as (char) based on the given (double average_score)
+char letterGrade(double average_score);
+
+void trimStrEnd(string &trimmed, char pat);
 
 int main(void) {
   const char *SCORES_FNAME = "StudentScores.txt";
@@ -42,7 +46,12 @@ int main(void) {
     filesystem::current_path().parent_path() / SCORES_FNAME;
 
   int num_stoods = getScores(scores, students, scores_path); 
+
   averageScores(scores, average_scores, num_stoods);
+
+  string report { gradeFormat(average_scores, students, num_stoods) };
+
+  cout << report << endl; 
 
   return 0;
 }
@@ -86,4 +95,79 @@ void averageScores(
 
     average_scores[i] = total / NUM_SCORES;
   }
+}
+
+string gradeFormat(
+    double *average_scores, string *students, int num_students) 
+{
+  constexpr size_t PRE_COLUMNS { sizeof(" | 90.3 | A") - 1 };
+  const string HEADER { "Student Grades Report" };
+
+  string format {};
+  
+  // extract the longest name length from the students array as the only 
+  // dynamically decided length contributing to the column count.
+  int max_name {};
+  for (int i {}; i < num_students; ++i) {
+    if (students[i].size() > max_name) {
+      max_name = students[i].size();
+    }
+  }
+
+  size_t total_cols { max_name + PRE_COLUMNS + 2 };
+  int header_padding = total_cols - HEADER.size();
+
+  // adds header 
+  for (int spaces {}; spaces < header_padding; ++spaces, format += ' ');
+  format += HEADER;
+  format += '\n';
+
+  for (int hyphens {}; hyphens < total_cols; ++hyphens, format += '-');
+  format += '\n';
+
+  for (int i {}, max_lpad { max_name + 1 }; i < num_students; ++i) {
+    size_t lpad { max_lpad - students[i].size() };
+
+    for (int i {}; i < lpad; ++i, format += ' ');   
+    
+    string score { to_string(average_scores[i]) };
+    trimStrEnd(score, '0');
+    format += students[i] + " | " + score + " | " + 
+      letterGrade(average_scores[i]) + '\n';
+  }
+
+  return format;
+}
+
+char letterGrade(double average_score) {
+  char grade;
+
+  if (average_score >= 90.0 && average_score <= 100.0) {
+    grade = 'A';  
+  } else if (average_score >= 80.0) {
+    grade = 'B';
+  } else if (average_score >= 70.0) {
+    grade = 'C';
+  } else if (average_score >= 60.0) {
+    grade = 'D';
+  } else if (average_score >= 0.0) {
+    grade = 'F'; 
+  }
+
+  return grade;
+}
+
+void trimStrEnd(string &trimmed, char pat) {
+  // iterate over the trimmed string in reverse
+  int erase_idx {};
+  for (size_t i { trimmed.size() - 1 }; i > 0; --i) {
+    if (trimmed[i] == pat) {
+      erase_idx = i; 
+    } else if (erase_idx != 0) {
+      break;
+    } 
+  }
+
+  if (erase_idx != 0) 
+    trimmed.erase(erase_idx);
 }
