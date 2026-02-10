@@ -1,19 +1,21 @@
 #define MAX_NUM_SCORES 128
 #define MAX_STUDENTS 256
 #define UNREACHABLE -1
+#define PRECISION 1 
 
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <string>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
-/// returns int number of students. 
-/// Loads the student names into (string *students), and the scores
-/// into 2D-array (int **scores) in an identical order to which student names
-/// are loaded into (string *students).
+/// returns int number of students. Loads the student names into 
+/// (string *students), and the scores into 2D-array (int **scores) in an 
+/// identical order to which student names are loaded into (string *students).
 int getScores(
     int scores[][MAX_NUM_SCORES], string *students, filesystem::path fpath);
 
@@ -33,12 +35,12 @@ string gradeFormat(double *average_scores, string *students, int num_students);
 /// returns the letter grade as (char) based on the given (double average_score)
 char letterGrade(double average_score);
 
-/// iterates in reverse over all characters in (string &trimmed), removing all
-/// (char pat) characters until a non (char pat) character is reached. 
-void trimStrEnd(string &trimmed, char pat);
+/// returns a string generated from (double score) with (int decimal_precision)
+/// number of decimal places.
+string getDoubleStr(double score, int decimal_precision);
 
-// global constant tracking number of test scores per student
-// set to max number of scores until the number of scores is known
+// global constant tracking number of test scores per student set to max the
+// number of scores until the real number of scores is known.
 int num_scores { MAX_NUM_SCORES };
 
 int main(void) {
@@ -151,12 +153,7 @@ string gradeFormat(
 
     for (int i {}; i < lpad; ++i, format += ' ');   
     
-    string score { to_string(average_scores[i]) };
-
-    // and trim trailing zeros and decimal point if there
-    // is no trailing nonzero decimal value. 
-    trimStrEnd(score, '0');
-    trimStrEnd(score, '.');
+    string score { getDoubleStr(average_scores[i], PRECISION) };
     
     // append average score
     format += students[i] + " | " + score + " | " + 
@@ -184,17 +181,8 @@ char letterGrade(double average_score) {
   return grade;
 }
 
-void trimStrEnd(string &trimmed, char pat) {
-  // iterate over the trimmed string in reverse
-  int erase_idx {};
-  for (size_t i { trimmed.size() - 1 }; i > 0; --i) {
-    if (trimmed[i] != pat) {
-      break;
-    } else {
-      erase_idx = i;
-    }
-  }
-
-  if (erase_idx != 0) 
-    trimmed.erase(erase_idx);
-}
+string getDoubleStr(double score, int decimal_precision) {
+  ostringstream score_str;
+  score_str << fixed << setprecision(decimal_precision) << score;
+  return score_str.str();
+}  
