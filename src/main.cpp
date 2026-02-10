@@ -1,4 +1,4 @@
-#define NUM_SCORES 5
+#define MAX_NUM_SCORES 128
 #define MAX_STUDENTS 256
 #define UNREACHABLE -1
 
@@ -15,12 +15,12 @@ using namespace std;
 /// into 2D-array (int **scores) in an identical order to which student names
 /// are loaded into (string *students).
 int getScores(
-    int scores[][NUM_SCORES], string *students, filesystem::path fpath);
+    int scores[][MAX_NUM_SCORES], string *students, filesystem::path fpath);
 
 /// Produces the average for each row of scores within (int **scores), and loads
 /// it into (double *average_scores) in a row-based identical ordering. 
 void averageScores(
-    int scores[][NUM_SCORES], double *average_scores, int num_students);
+    int scores[][MAX_NUM_SCORES], double *average_scores, int num_students);
 
 /// Assigns each student within (string *students) a letter grade based on their
 /// score from (double *average_scores) and produces a neatly formatted column
@@ -37,10 +37,14 @@ char letterGrade(double average_score);
 /// (char pat) characters until a non (char pat) character is reached. 
 void trimStrEnd(string &trimmed, char pat);
 
+// global constant tracking number of test scores per student
+// set to max number of scores until the number of scores is known
+int num_scores { MAX_NUM_SCORES };
+
 int main(void) {
   const char *SCORES_FNAME = "StudentScores.txt";
 
-  int scores[MAX_STUDENTS][NUM_SCORES];
+  int scores[MAX_STUDENTS][MAX_NUM_SCORES];
   double average_scores[MAX_STUDENTS];
   string students[MAX_STUDENTS] {};
 
@@ -59,7 +63,7 @@ int main(void) {
 }
 
 int getScores(
-    int scores[][NUM_SCORES], string *students, filesystem::path fpath) 
+    int scores[][MAX_NUM_SCORES], string *students, filesystem::path fpath) 
 {
   const char *ERR_FOPEN = "Error: failed to open file";
   const char *ERR_FREAD = "Error: file read error";  
@@ -74,7 +78,19 @@ int getScores(
   // read the student and score names into their respective arrays
   int nstd {};
   for (; nstd < MAX_STUDENTS && file >> students[nstd]; ++nstd) {
-    for (int i {}; i < NUM_SCORES && file >> scores[nstd][i]; ++i);
+    for (int i {}; i < num_scores && i < MAX_NUM_SCORES; ++i) {
+      bool res = !(file >> scores[nstd][i]);
+
+      if (res && num_scores == MAX_NUM_SCORES) {
+        num_scores = i;   
+        file.clear();
+        break;
+      } else if (res) {
+        file.clear();
+        break;
+      }
+    }
+    
   }
 
   if (file.eof()) {
@@ -88,16 +104,16 @@ int getScores(
 } 
 
 void averageScores(
-    int scores[][NUM_SCORES], double *average_scores, int num_students) 
+    int scores[][MAX_NUM_SCORES], double *average_scores, int num_students) 
 {
   for (int i {}; i < num_students; ++i) {
     double total {};
 
-    for (int ii {}; ii < NUM_SCORES; ++ii) {
+    for (int ii {}; ii < num_scores; ++ii) {
       total += scores[i][ii];
     }
 
-    average_scores[i] = total / NUM_SCORES;
+    average_scores[i] = total / num_scores;
   }
 }
 
@@ -135,9 +151,14 @@ string gradeFormat(
 
     for (int i {}; i < lpad; ++i, format += ' ');   
     
-    // append average score and trim trailing zeros 
     string score { to_string(average_scores[i]) };
+
+    // and trim trailing zeros and decimal point if there
+    // is no trailing nonzero decimal value. 
     trimStrEnd(score, '0');
+    trimStrEnd(score, '.');
+    
+    // append average score
     format += students[i] + " | " + score + " | " + 
       letterGrade(average_scores[i]) + '\n';
   }
@@ -167,11 +188,11 @@ void trimStrEnd(string &trimmed, char pat) {
   // iterate over the trimmed string in reverse
   int erase_idx {};
   for (size_t i { trimmed.size() - 1 }; i > 0; --i) {
-    if (trimmed[i] == pat) {
-      erase_idx = i; 
-    } else if (erase_idx != 0) {
+    if (trimmed[i] != pat) {
       break;
-    } 
+    } else {
+      erase_idx = i;
+    }
   }
 
   if (erase_idx != 0) 
