@@ -33,6 +33,8 @@ string gradeFormat(double *average_scores, string *students, int num_students);
 /// returns the letter grade as (char) based on the given (double average_score)
 char letterGrade(double average_score);
 
+/// iterates in reverse over all characters in (string &trimmed), removing all
+/// (char pat) characters until a non (char pat) character is reached. 
 void trimStrEnd(string &trimmed, char pat);
 
 int main(void) {
@@ -62,12 +64,14 @@ int getScores(
   const char *ERR_FOPEN = "Error: failed to open file";
   const char *ERR_FREAD = "Error: file read error";  
 
+  // get scores file
   ifstream file { fpath };
   if (!file) {
     cerr << ERR_FOPEN << endl;
     exit(EXIT_FAILURE);
   }
 
+  // read the student and score names into their respective arrays
   int nstd {};
   for (; nstd < MAX_STUDENTS && file >> students[nstd]; ++nstd) {
     for (int i {}; i < NUM_SCORES && file >> scores[nstd][i]; ++i);
@@ -106,7 +110,7 @@ string gradeFormat(
   string format {};
   
   // extract the longest name length from the students array as the only 
-  // dynamically decided length contributing to the column count.
+  // dynamical length contributing to the column count.
   int max_name {};
   for (int i {}; i < num_students; ++i) {
     if (students[i].size() > max_name) {
@@ -117,11 +121,12 @@ string gradeFormat(
   size_t total_cols { max_name + PRE_COLUMNS + 2 };
   int header_padding = total_cols - HEADER.size();
 
-  // adds header 
+  // adds header to the report string
   for (int spaces {}; spaces < header_padding; ++spaces, format += ' ');
   format += HEADER;
   format += '\n';
 
+  // adds a '-' seperator to the report string
   for (int hyphens {}; hyphens < total_cols; ++hyphens, format += '-');
   format += '\n';
 
@@ -130,6 +135,7 @@ string gradeFormat(
 
     for (int i {}; i < lpad; ++i, format += ' ');   
     
+    // append average score and trim trailing zeros 
     string score { to_string(average_scores[i]) };
     trimStrEnd(score, '0');
     format += students[i] + " | " + score + " | " + 
