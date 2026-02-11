@@ -43,15 +43,22 @@ string getDoubleStr(double score, int decimal_precision);
 // number of scores until the real number of scores is known.
 int num_scores { MAX_NUM_SCORES };
 
-int main(void) {
-  const char *SCORES_FNAME = "StudentScores.txt";
+int main(int argc, char *argv[]) {
+  const char *ERR_NOARGS = 
+    "Error: supply path of scores file: ./GradeBook ./path/to/scores";
 
   int scores[MAX_STUDENTS][MAX_NUM_SCORES];
   double average_scores[MAX_STUDENTS];
   string students[MAX_STUDENTS] {};
 
-  filesystem::path scores_path = 
-    filesystem::current_path().parent_path() / SCORES_FNAME;
+
+  if (argc < 2) {
+    cerr << ERR_NOARGS << endl;
+    exit(1);
+  }
+
+  // use argument given path as the scores path
+  filesystem::path scores_path = argv[1];
 
   int num_stoods = getScores(scores, students, scores_path); 
 
