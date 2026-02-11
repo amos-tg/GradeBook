@@ -72,32 +72,40 @@ int getScores(
 
   // get scores file
   ifstream file { fpath };
-  if (!file) {
+  if (!file)
+  {
     cerr << ERR_FOPEN << endl;
     exit(EXIT_FAILURE);
   }
 
   // read the student and score names into their respective arrays
   int nstd {};
-  for (; nstd < MAX_STUDENTS && file >> students[nstd]; ++nstd) {
-    for (int i {}; i < num_scores && i < MAX_NUM_SCORES; ++i) {
+  for (; nstd < MAX_STUDENTS && file >> students[nstd]; ++nstd)
+  {
+    for (int i {}; i < num_scores && i < MAX_NUM_SCORES; ++i) 
+    {
       bool res = !(file >> scores[nstd][i]);
 
-      if (res && num_scores == MAX_NUM_SCORES) {
+      if (res && num_scores == MAX_NUM_SCORES) 
+      {
         num_scores = i;   
         file.clear();
         break;
-      } else if (res) {
+      } 
+      else if (res) 
+      {
         file.clear();
         break;
       }
     }
-    
   }
 
-  if (file.eof()) {
+  if (file.eof()) 
+  {
     return nstd;
-  } else if (!file) {
+  } 
+  else if (!file) 
+  {
     cerr << ERR_FREAD << endl;
     exit(EXIT_FAILURE);
   }
@@ -108,10 +116,12 @@ int getScores(
 void averageScores(
     int scores[][MAX_NUM_SCORES], double *average_scores, int num_students) 
 {
-  for (int i {}; i < num_students; ++i) {
+  for (int i {}; i < num_students; ++i) 
+  {
     double total {};
 
-    for (int ii {}; ii < num_scores; ++ii) {
+    for (int ii {}; ii < num_scores; ++ii) 
+    {
       total += scores[i][ii];
     }
 
@@ -130,8 +140,10 @@ string gradeFormat(
   // extract the longest name length from the students array as the only 
   // dynamical length contributing to the column count.
   int max_name {};
-  for (int i {}; i < num_students; ++i) {
-    if (students[i].size() > max_name) {
+  for (int i {}; i < num_students; ++i) 
+  {
+    if (students[i].size() > max_name) 
+    {
       max_name = students[i].size();
     }
   }
@@ -148,7 +160,8 @@ string gradeFormat(
   for (int hyphens {}; hyphens < total_cols; ++hyphens, format += '-');
   format += '\n';
 
-  for (int i {}, max_lpad { max_name + 1 }; i < num_students; ++i) {
+  for (int i {}, max_lpad { max_name + 1 }; i < num_students; ++i) 
+  {
     size_t lpad { max_lpad - students[i].size() };
 
     for (int i {}; i < lpad; ++i, format += ' ');   
@@ -166,15 +179,24 @@ string gradeFormat(
 char letterGrade(double average_score) {
   char grade;
 
-  if (average_score >= 90.0 && average_score <= 100.0) {
+  if (average_score >= 90.0 && average_score <= 100.0) 
+  {
     grade = 'A';  
-  } else if (average_score >= 80.0) {
+  }
+  else if (average_score >= 80.0) 
+  {
     grade = 'B';
-  } else if (average_score >= 70.0) {
+  }
+  else if (average_score >= 70.0) 
+  {
     grade = 'C';
-  } else if (average_score >= 60.0) {
+  }
+  else if (average_score >= 60.0) 
+  {
     grade = 'D';
-  } else if (average_score >= 0.0) {
+  }
+  else if (average_score >= 0.0) 
+  {
     grade = 'F'; 
   }
 
